@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+#
+# faatxt2csv -- parse FAA ADS-B Towers list from cyoung to CSV
+#
+# 2025-03-05, bspatz: first try
+#
+# faatxt2csv < faa.txt > towers.txt
+#
+# https://www.faa.gov/foia/electronic_reading_room, then 
+# https://github.com/cyoung/adsbtowers and faa-08-31-2018.txt
+#
+# BKV Brooksville FL 28.4808969497681 -82.4758028984070 8 Low
+# 3N6 OldÂ Bridge NJ 40.4029941558838 -74.0440106391907 8 Low
+# FRG Farmingdale NY 40.7756924629211 -73.4416079521179 B Medium
+#
+# CSV:
+# id,facility, state, lat, long, tis_id, fis_tier
+# FRG,Farmingdale,NY,40.7756924629211,-73.4416079521179,B,Medium
+
+print("id,facility,state,lat,long,tis_id,fis_tier\n");
+while(<STDIN>) {
+   next if /^#/;
+   chop;
+   /^(\S+) ([^0-9]+) (.+$)/;
+   $id = $1;
+   $loc = $2;
+   ($lat, $long, $tis_id, $fis_tier) = split(" ", $3);
+   $loc =~ /(.+) (.+)$/;
+   $facility = $1; $state = $2;
+   print("$id,$facility,$state,$lat,$long,$tis_id,$fis_tier\n");
+}
+#
+# [end of file]
