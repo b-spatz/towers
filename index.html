@@ -58,7 +58,7 @@ d3.csv("towers.txt", function(towers) {
 function cluster_tooltip (obj) {
    //return(JSON.stringify(obj, null, 1).replace(/\"/g, "").replace(/\{|\}/g, "").replace(/,\n/g, "<br>"));
    var t = '<table>';
-   Object.keys(obj).forEach(function (k) { t += '<tr><td align=right><b>' + k + ':</b></td><td>' + obj[k] + '</td></tr>'; });
+   Object.keys(obj).forEach(function (k) { t += '<tr><td align=right><b>' + k + ':</b></td><td style="white-space: nowrap;">' + obj[k] + '</td></tr>'; });
    t += '</table>';
    return (t);
 };
