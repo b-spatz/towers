@@ -1,0 +1,67 @@
+
+<!--
+ADS-B Towers Map
+
+2025-03-05, bspatz: cobble from regions maps
+
+-->
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<p>ADS-B Towers <a target="_blank" href="regions.txt">regions</a>, idea from
+<a target="_blank" href="http://towers.stratux.me/">stratux map</a>,
+<a target="_blank" href="https://github.com/cyoung/adsbtowers">cyoung data</a>.
+</p>
+<div id="map" style="_height: 600px; height: 90%;"</div>
+<div style="display: none;"><div id="credit" class="leaflet-control-attribution">ADS-B Towers (2025-03-05, bspatz; from <a target="_blank" href="https://github.com/cyoung/adsbtowers">cyoung data</a>)</a></div></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+// SVG pin icon, lighter-weight than default PNG for many pins
+var _html = '<svg height="32" width="32" viewBox="0 0 512 512"><circle cx="256" cy="192" r="62" fill="white"/><path d="M256 32C167.67 32 96 96.51 96 176c0 128 160 304 160 304s160-176 160-304c0-79.49-71.67-144-160-144zm0 224a64 64 0 1164-64 64.07 64.07 0 01-64 64z" fill="#237cc9"/></svg>';
+var my_icon = L.divIcon({ className: 'no-class-avoid-default', iconAnchor: [16,32], popupAnchor: [0,-32], html: _html });
+
+d3.csv("towers.txt", function(towers) {
+   var fc = { "type": "FeatureCollection", "features": [] };
+   towers.forEach(function(d, i) {
+      var f = {
+         "type": "Feature",
+         "geometry": {
+            "type": "Point",
+            "coordinates": [d.long, d.lat]
+         },
+         //"properties": { "id": d.id }
+         "properties": d
+      }; 
+      fc.features.push(f);
+   });
+
+   var map = L.map("map");
+   var streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 10, attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+   var credit = L.control({ position: "bottomleft" }); credit.onAdd = function() { return L.DomUtil.get("credit"); }; credit.addTo(map);
+
+   $.getJSON("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json", function(geojson) {
+      L.geoJSON(geojson, { style: { color: "black", weight: 0.5, fillcolor: null }}).addTo(map);
+      var gj_layer = L.geoJSON(fc, {
+         pointToLayer: function(feature, latlng) { return L.marker(latlng, { icon: my_icon }); },
+         onEachFeature: function(feature, layer) {
+            delete feature.properties.lat; delete feature.properties.long;
+            layer.bindTooltip(cluster_tooltip(feature.properties), { direction: "top", offset: [0,-20] } );
+            layer.bindPopup(cluster_tooltip(feature.properties), { direction: "top", offset: [0,25] } );
+         }
+      }).addTo(map);
+      map.fitBounds(gj_layer.getBounds());
+   });
+});
+
+// Make a pretty tooltip
+function cluster_tooltip (obj) {
+   //return(JSON.stringify(obj, null, 1).replace(/\"/g, "").replace(/\{|\}/g, "").replace(/,\n/g, "<br>"));
+   var t = '<table>';
+   Object.keys(obj).forEach(function (k) { t += '<tr><td align=right><b>' + k + ':</b></td><td>' + obj[k] + '</td></tr>'; });
+   t += '</table>';
+   return (t);
+};
+</script>
